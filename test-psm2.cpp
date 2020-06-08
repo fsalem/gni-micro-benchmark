@@ -281,7 +281,7 @@ int main(int argc, char **argv) {
 					assert(result == 0);
 				}
 			}
-			if ((event.flags & FI_MSG & FI_RECV) != 0) {
+			if ((event.flags & FI_RECV) != 0) {
 				std::cout << "FI_MSG " << counter << "    " << (event.flags & FI_SEND) << " --> " << (event.flags & FI_RECV) << std::endl;
 				//std::cout << "FI_MSG " << event.flags << std::endl;
 				//std::cout << "FI_MSG " << event.buf << std::endl;
