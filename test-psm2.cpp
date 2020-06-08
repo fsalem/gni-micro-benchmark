@@ -314,7 +314,7 @@ int main(int argc, char **argv) {
 					res = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
 					assert(result == 0);
 				}else {
-					if (counter > 0){
+					if (counter > 1){
 						cout << "force exit after " << counter << "...\n";
 						exit(1);
 					}
