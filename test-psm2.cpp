@@ -116,8 +116,8 @@ struct fi_info *find_psm2() {
 struct fi_info *find_other_addr() {
   struct fi_info *info  = fi_allocinfo();
   struct fi_info *hints = fi_allocinfo();
-  struct sockaddr ipogif0_addr;
   char* other_addr = get_other_address();
+  cout << "other_addr: " << other_addr << endl;
 
   hints->caps =
 	    FI_MSG | FI_RMA | FI_WRITE | FI_SEND | FI_RECV | FI_REMOTE_WRITE | FI_TAGGED;
