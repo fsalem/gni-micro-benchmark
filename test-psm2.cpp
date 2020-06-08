@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
 	res = fi_endpoint(domain, info, &ep, NULL);
 	assert(res == 0);
 	cout << "bind cq" << endl;
-	res = fi_ep_bind(ep, (fid_t) cq, FI_RECV); //  | FI_TRANSMIT
+	res = fi_ep_bind(ep, (fid_t) cq, FI_SEND | FI_RECV); //  | FI_TRANSMIT
 	assert(res == 0);
 	res = fi_enable(ep);
 	assert(res == 0);
@@ -269,7 +269,7 @@ int main(int argc, char **argv) {
 					rma_msg.data = 14195;
 					cout << "[" << alps_app_pe
 							<< "] start fi_writemsg call ...\n";
-					res = fi_writemsg(ep, &rma_msg, FI_COMPLETION|FI_INJECT);
+					res = fi_writemsg(ep, &rma_msg, FI_COMPLETION|FI_REMOTE_CQ_DATA);
 					cout << "[" << alps_app_pe << "] fi_writemsg call ended\n";
 					assert(result == 0);
 				} else {
@@ -310,10 +310,7 @@ int main(int argc, char **argv) {
 					rma_msg.context = &fi_write2_context;
 					rma_msg.data = 14195;
 					start = std::chrono::high_resolution_clock::now();
-					cout << "[" << alps_app_pe
-												<< "] start fi_writemsg call ...\n";
-					res = fi_writemsg(ep, &rma_msg, FI_COMPLETION|FI_INJECT);
-					cout << "[" << alps_app_pe << "] fi_writemsg call ended\n";
+					res = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
 					assert(result == 0);
 				} else {
 
