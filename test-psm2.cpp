@@ -314,12 +314,14 @@ int main(int argc, char **argv) {
 					res = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
 					assert(result == 0);
 				}else {
-					if (counter > 1){
+					if (counter == 1){
 						cout << "force exit after " << counter << "...\n";
 						exit(1);
 					}
 					counter++;
 				}
+				res = fi_recv(ep, &recv_buffer, recv_buffer_len, NULL, FI_ADDR_UNSPEC, &fi_recv_context);
+				assert(res == 0);
 			}
 		}
 	}
