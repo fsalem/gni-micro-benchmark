@@ -266,9 +266,9 @@ int main(int argc, char **argv) {
         rma_msg.rma_iov_count = 1;
         rma_msg.context       = &fi_write1_context;
         rma_msg.data          = 14195;
-        cout << "[" << alps_app_pe << "] start fi_writemsg call ...";
+        cout << "[" << alps_app_pe << "] start fi_writemsg call ...\n";
         res = fi_writemsg(ep, &rma_msg, FI_REMOTE_CQ_DATA);
-        cout << "[" << alps_app_pe << "] fi_writemsg call ended";
+        cout << "[" << alps_app_pe << "] fi_writemsg call ended\n";
         assert(result == 0);
       }
       if((event.flags & FI_MSG) != 0) {
