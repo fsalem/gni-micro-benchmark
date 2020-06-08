@@ -281,7 +281,7 @@ int main(int argc, char **argv) {
 				}
 			}
 			if ((event.flags & FI_MSG) != 0) {
-				std::cout << "FI_MSG " << std::endl;
+				std::cout << "FI_MSG " << counter << std::endl;
 				//std::cout << "FI_MSG " << event.flags << std::endl;
 				//std::cout << "FI_MSG " << event.buf << std::endl;
 				struct mr_message *msg;
