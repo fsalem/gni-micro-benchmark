@@ -35,6 +35,8 @@ const size_t buffer_size = 8*1024;
 //const size_t buffer_size = 1024;
 const unsigned int iterations = 20;
 
+char *ip_address;
+
 struct mr_message {
   uint64_t mr_key;
   uintptr_t addr;
@@ -69,59 +71,16 @@ bool ip_compare(struct sockaddr_in *a, struct sockaddr *b) {
   return result;
 }
 
-void get_ipogif0_ip(struct sockaddr *addr) {
-  struct ifaddrs *ifaddr, *ifa;
-  int n;
-
-  int res = getifaddrs(&ifaddr);
-  assert(res == 0);
-
-  for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, n++) {
-    if (ifa->ifa_addr == NULL)
-      continue;
-
-    if(0 == strcmp(ifa->ifa_name, "ipogif0")) {
-      *addr = *ifa->ifa_addr;
-    }
-  }
-}
-
-char *get_other_address(struct sockaddr ipogif0_addr) {
-  char hostname[256];
+char *get_other_address() {
   std::string line;
-
-  int res = gethostname(hostname, 256);
-  assert(res == 0);
 
   ifstream file("nodes");
   if (!file.is_open())
     cout << "error while opening file" << endl;
 
   while(getline(file, line)) {
-    struct in_addr addr;
-    struct sockaddr_in sa;
-
     cout << "read from nodes file: " << line.c_str() << endl;
-    res = inet_pton(AF_INET, line.c_str(), &addr);
-    if(res != 1)
-      std::cout << strerror(errno) << std::endl;
-    assert(res == 1);
-
-    sa.sin_family = AF_INET;
-    sa.sin_port = htons(14196);
-    sa.sin_addr = addr;
-    if(!ip_compare(&sa, &ipogif0_addr)) {
-      char ip[INET6_ADDRSTRLEN];
-      const char *p = inet_ntop(AF_INET, &sa.sin_addr, ip, INET6_ADDRSTRLEN);
-      assert(p != NULL);
-      cout << "connecting to: " << ip << endl;
-      return strdup(line.c_str());
-    } else {
-      char ip[INET6_ADDRSTRLEN];
-      const char *p = inet_ntop(AF_INET, &sa.sin_addr, ip, INET6_ADDRSTRLEN);
-      assert(p != NULL);
-      cout << "did not connect to: " << ip << endl;
-    }
+    if (ip_address != line)return strdup(line.c_str());
   }
   return strdup("");
 }
@@ -129,12 +88,6 @@ char *get_other_address(struct sockaddr ipogif0_addr) {
 struct fi_info *find_psm2() {
   struct fi_info *info  = fi_allocinfo();
   struct fi_info *hints = fi_allocinfo();
-  char hostname[256];
-
-  int res = gethostname(hostname, 256);
-  std::cout << "[find_psm2] hostname: " << hostname << std::endl;
-  assert(res == 0);
-
 
   hints->caps =
 	    FI_MSG | FI_RMA | FI_WRITE | FI_SEND | FI_RECV | FI_REMOTE_WRITE | FI_TAGGED;
@@ -145,7 +98,7 @@ struct fi_info *find_psm2() {
   hints->domain_attr->mr_mode = FI_MR_BASIC;
   hints->fabric_attr->prov_name = "psm2";
 
-  res = fi_getinfo(FI_VERSION(1,1), hostname, "14195", FI_SOURCE, hints, &info);
+  int res = fi_getinfo(FI_VERSION(1,1), ip_address, "14195", FI_SOURCE, hints, &info);
   assert(res == 0);
   assert(info != NULL);
 
@@ -164,10 +117,7 @@ struct fi_info *find_other_addr() {
   struct fi_info *info  = fi_allocinfo();
   struct fi_info *hints = fi_allocinfo();
   struct sockaddr ipogif0_addr;
-  char* other_addr;
-
-  get_ipogif0_ip(&ipogif0_addr);
-  other_addr = get_other_address(ipogif0_addr);
+  char* other_addr = get_other_address();
 
   hints->caps =
 	    FI_MSG | FI_RMA | FI_WRITE | FI_SEND | FI_RECV | FI_REMOTE_WRITE | FI_TAGGED;
@@ -194,6 +144,7 @@ struct fi_info *find_other_addr() {
 }
 
 int main(int argc, char **argv) {
+  ip_address = argv[1];
   struct fi_info *info = find_psm2();
   char *buffer;
   struct fi_av_attr av_attr;
