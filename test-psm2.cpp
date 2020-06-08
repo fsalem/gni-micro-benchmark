@@ -293,6 +293,7 @@ int main(int argc, char **argv) {
         std::cout << "FI_MSG " << event.buf << std::endl;
         struct mr_message *msg;
         msg = (struct mr_message *)event.buf;
+        std::cout << "FI_MSG " << msg << std::endl;
         remote_key = msg->mr_key;
         remote_addr = msg->addr;
         std::cout << "FI_MSG alps_app_pe " << alps_app_pe << std::endl;
