@@ -96,7 +96,7 @@ struct fi_info *find_psm2() {
   hints->domain_attr->threading = FI_THREAD_COMPLETION;
   hints->domain_attr->data_progress = FI_PROGRESS_AUTO;
   hints->domain_attr->mr_mode = FI_MR_BASIC;
-  hints->fabric_attr->prov_name = "psm2";
+  hints->fabric_attr->prov_name = strdup("psm2");
 
   int res = fi_getinfo(FI_VERSION(1,1), ip_address, "14195", FI_SOURCE, hints, &info);
   assert(res == 0);
@@ -126,7 +126,7 @@ struct fi_info *find_other_addr() {
   hints->domain_attr->threading = FI_THREAD_COMPLETION;
   hints->domain_attr->data_progress = FI_PROGRESS_AUTO;
   hints->domain_attr->mr_mode = FI_MR_BASIC;
-  hints->fabric_attr->prov_name = "psm2";
+  hints->fabric_attr->prov_name = strdup("psm2");
 
   int res = fi_getinfo(FI_VERSION(1,1), other_addr, "14195", FI_NUMERICHOST, hints, &info);
   assert(res == 0);
