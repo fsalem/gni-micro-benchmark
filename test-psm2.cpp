@@ -205,15 +205,16 @@ int main(int argc, char **argv) {
   mr_key = fi_mr_key(mr);
 
 
-  sleep(30);
+  sleep(10);
 
   struct fi_info *other_info = find_other_addr();
   assert(other_info->dest_addr != NULL);
   res = fi_av_insert(av, other_info->dest_addr, 1, &fi_addr, 0, NULL);
-  //printf("%d\n", fi_addr);
+  printf("%d\n", fi_addr);
   assert(res == 1);
 
 
+  printf("fi_recv\n");
   res = fi_recv(ep, &recv_buffer, recv_buffer_len, NULL,
                 FI_ADDR_UNSPEC, &fi_recv_context);
   assert(res == 0);
@@ -237,12 +238,14 @@ int main(int argc, char **argv) {
   msg.addr      = fi_addr;
   msg.context   = &fi_send_context;
   msg.data      = 14195;
+
+  printf("fi_sendmsg\n");
   ssize_t result = fi_sendmsg(ep, &msg, FI_REMOTE_CQ_DATA);
-  //cout << fi_strerror(-result) << endl;
+  cout << fi_strerror(-result) << endl;
   assert(result == 0);
 
   sleep(1);
-  //cout << "cq" << endl;
+  cout << "cq" << endl;
   uint64_t remote_key;
   uintptr_t remote_addr;
   char *alps_app_pe = getenv("ALPS_APP_PE");
@@ -253,7 +256,7 @@ int main(int argc, char **argv) {
     ssize_t read = fi_cq_read(cq, &event, 1);
     if(read == 1) {
       if((event.flags & FI_RMA) != 0) {
-        //std::cout << "FI_RMA " << std::endl;
+        std::cout << "FI_RMA " << std::endl;
         if(0 == strcmp(alps_app_pe, "1")) {
           counter++;
           if(counter == iterations) {
@@ -285,7 +288,7 @@ int main(int argc, char **argv) {
         assert(result == 0);
       }
       if((event.flags & FI_MSG) != 0) {
-        //std::cout << "FI_MSG " << std::endl;
+        std::cout << "FI_MSG " << std::endl;
         struct mr_message *msg;
         msg = (struct mr_message *)event.buf;
         remote_key = msg->mr_key;
