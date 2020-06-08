@@ -204,6 +204,9 @@ int main(int argc, char **argv) {
   assert(res == 0);
   mr_key = fi_mr_key(mr);
 
+
+  sleep(30);
+
   struct fi_info *other_info = find_other_addr();
   assert(other_info->dest_addr != NULL);
   res = fi_av_insert(av, other_info->dest_addr, 1, &fi_addr, 0, NULL);
