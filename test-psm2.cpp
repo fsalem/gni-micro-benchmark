@@ -79,7 +79,7 @@ char *get_other_address() {
     cout << "error while opening file" << endl;
 
   while(getline(file, line)) {
-    cout << "read from nodes file: " << line.c_str() << endl;
+    cout << "read from nodes file: " << line.c_str() << " local is " << ip_address << endl;
     if (ip_address != line)return strdup(line.c_str());
   }
   return strdup("");
