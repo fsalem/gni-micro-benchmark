@@ -249,6 +249,14 @@ int main(int argc, char **argv) {
 										/ 1024.0 / 1024.0 << " GB/s" << endl;
 						exit(1);
 					}
+					if (counter == iterations / 2) {
+						cout << "[" << alps_app_pe << "] start fi_sendmsg call ...\n";
+						ssize_t result = fi_sendmsg(ep, &msg, FI_REMOTE_CQ_DATA);
+						cout << "[" << alps_app_pe << "] fi_sendmsg call ended\n";
+						cout << fi_strerror(-result) << endl;
+						assert(result == 0);
+						sleep(5);
+					}
 					struct iovec rma_iov;
 					rma_iov.iov_base = buffer;
 					rma_iov.iov_len = buffer_size;
@@ -271,13 +279,6 @@ int main(int argc, char **argv) {
 					res = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
 					cout << "[" << alps_app_pe << "] fi_writemsg call ended\n";
 					assert(result == 0);
-					if (counter == iterations / 2) {
-						cout << "[" << alps_app_pe << "] start fi_sendmsg call ...\n";
-						ssize_t result = fi_sendmsg(ep, &msg, FI_REMOTE_CQ_DATA);
-						cout << "[" << alps_app_pe << "] fi_sendmsg call ended\n";
-						cout << fi_strerror(-result) << endl;
-						assert(result == 0);
-					}
 				}
 			}
 			if ((event.flags & FI_MSG & FI_RECV) != 0) {
