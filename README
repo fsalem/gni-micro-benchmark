@@ -1,0 +1,20 @@
+Note, that this benchmark only works with psm2. It explicitly requests the PSM2 provider:
+strcmp("psm2",info->fabric_attr->prov_name)
+
+The build-psm2.sh script builds the test executable and runs it. Note,
+that you have to change the LIBFABRIC variable in build-psm2.sh to
+match you envrionment.
+
+
+call:
+> msub -I -l walltime=0:30:00 -l nodes=2
+to start an interactive session with 2 nodes
+
+When the session has started call:
+> module load gcc
+The following command will start the ping pong benchmark and report the bandwidth in the end
+> ./build-psm2.sh
+you have to stop the program with CTRL-c.
+
+You can change the package size for the RMA operations in
+test-psm2.cpp. At the top of the file there is a buffer_size variable.
