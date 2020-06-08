@@ -236,7 +236,7 @@ int main(int argc, char **argv) {
 		ssize_t read = fi_cq_read(cq, &event, 1);
 		if (read == 1) {
 			if ((event.flags & FI_RMA) != 0) {
-				std::cout << "FI_RMA " << std::endl;
+				std::cout << "FI_RMA " << counter << std::endl;
 				counter++;
 				if (0 == strcmp(alps_app_pe, "1")) {
 					if (counter == iterations) {
@@ -312,8 +312,6 @@ int main(int argc, char **argv) {
 					start = std::chrono::high_resolution_clock::now();
 					res = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
 					assert(result == 0);
-				} else {
-
 				}
 			}
 		}
