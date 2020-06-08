@@ -254,7 +254,6 @@ int main(int argc, char **argv) {
   while(1) {
     struct fi_cq_data_entry event;
     ssize_t read = fi_cq_read(cq, &event, 1);
-    cout << "read " << read << endl;
     if(read == 1) {
       if((event.flags & FI_RMA) != 0) {
         std::cout << "FI_RMA " << std::endl;
