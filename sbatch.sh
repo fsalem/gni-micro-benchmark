@@ -22,7 +22,7 @@ ADR=$( IFS=$' '; echo "${ADR[*]}" )
 echo "ADD3=$ADR"
 
 echo "# of nodes = $SLURM_JOB_NUM_NODES, COMPUTE=$COMPUTE, INPUT=$INPUT, ADR='$ADR'"
-rm "nodes"
+rm "nodes" "test-psm2"
 for ip in $ADR
 do
     echo "$ip"

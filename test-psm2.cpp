@@ -132,6 +132,7 @@ struct fi_info *find_psm2() {
   char hostname[256];
 
   int res = gethostname(hostname, 256);
+  std::cout << "[find_psm2] hostname: " << hostname << std::endl;
   assert(res == 0);
 
 
