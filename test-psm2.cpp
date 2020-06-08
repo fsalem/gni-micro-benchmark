@@ -35,7 +35,7 @@ const size_t buffer_size = 8*1024;
 //const size_t buffer_size = 1024;
 const unsigned int iterations = 20;
 
-char *ip_address;
+char *ip_address, *alps_app_pe;
 
 struct mr_message {
   uint64_t mr_key;
@@ -145,6 +145,7 @@ struct fi_info *find_other_addr() {
 
 int main(int argc, char **argv) {
   ip_address = argv[1];
+  alps_app_pe = argv[2];
   struct fi_info *info = find_psm2();
   char *buffer;
   struct fi_av_attr av_attr;
@@ -248,7 +249,6 @@ int main(int argc, char **argv) {
   cout << "cq" << endl;
   uint64_t remote_key;
   uintptr_t remote_addr;
-  char *alps_app_pe = getenv("ALPS_APP_PE");
   unsigned int counter = 0;
   std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
   while(1) {
