@@ -48,29 +48,6 @@ struct fi_custom_context{
 	uint64_t op_context;
 } fi_custom_context;
 
-bool ip_compare(struct sockaddr_in *a, struct sockaddr *b) {
-  char first[INET6_ADDRSTRLEN];
-  char second[INET6_ADDRSTRLEN];
-
-  struct sockaddr_in *b_ = reinterpret_cast<struct sockaddr_in*>(b);
-
-  const char *p1 = inet_ntop(AF_INET, &a->sin_addr, first, INET6_ADDRSTRLEN);
-  const char *p2 = inet_ntop(AF_INET, &b_->sin_addr, second, INET6_ADDRSTRLEN);
-
-  bool result = true;
-  if(a->sin_family != b->sa_family) {
-    //cout << "ip_compare: different family" << endl;
-    result = false;
-  }
-  if(a->sin_addr.s_addr != b_->sin_addr.s_addr) {
-    //cout << "ip_compare: different addr(" << a->sin_addr.s_addr << ", " << b_->sin_addr.s_addr << ")" << endl;
-    result =  false;
-  }
-
-  //cout << "compared(" << first << ", " << second << ") == " << result << endl;
-  return result;
-}
-
 char *get_other_address() {
   std::string line;
 
@@ -211,11 +188,11 @@ int main(int argc, char **argv) {
   struct fi_info *other_info = find_other_addr();
   assert(other_info->dest_addr != NULL);
   res = fi_av_insert(av, other_info->dest_addr, 1, &fi_addr, 0, NULL);
-  printf("%d\n", fi_addr);
+  //printf("%d\n", fi_addr);
   assert(res == 1);
 
 
-  printf("fi_recv\n");
+  //printf("fi_recv\n");
   res = fi_recv(ep, &recv_buffer, recv_buffer_len, NULL,
                 FI_ADDR_UNSPEC, &fi_recv_context);
   assert(res == 0);
@@ -240,13 +217,13 @@ int main(int argc, char **argv) {
   msg.context   = &fi_send_context;
   msg.data      = 14195;
 
-  printf("fi_sendmsg\n");
+  //printf("fi_sendmsg\n");
   ssize_t result = fi_sendmsg(ep, &msg, FI_REMOTE_CQ_DATA);
   cout << fi_strerror(-result) << endl;
   assert(result == 0);
 
   sleep(1);
-  cout << "cq" << endl;
+  //cout << "cq" << endl;
   uint64_t remote_key;
   uintptr_t remote_addr;
   unsigned int counter = 0;
@@ -257,14 +234,14 @@ int main(int argc, char **argv) {
     if(read == 1) {
       if((event.flags & FI_RMA) != 0) {
         std::cout << "FI_RMA " << std::endl;
-        if(0 == strcmp(alps_app_pe, "1")) {
+        //if(0 == strcmp(alps_app_pe, "1")) {
           counter++;
           if(counter == iterations) {
             end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> elapsed_seconds = end-start;
             cout << (buffer_size * 2 * iterations)/elapsed_seconds.count()/1024.0/1024.0/1024.0 << " GB/s" << endl;
             exit(1);
-          }
+          //}
         }
         struct iovec rma_iov;
         rma_iov.iov_base = buffer;
@@ -289,14 +266,14 @@ int main(int argc, char **argv) {
       }
       if((event.flags & FI_MSG) != 0) {
         std::cout << "FI_MSG " << std::endl;
-        std::cout << "FI_MSG " << event.flags << std::endl;
-        std::cout << "FI_MSG " << event.buf << std::endl;
+        //std::cout << "FI_MSG " << event.flags << std::endl;
+        //std::cout << "FI_MSG " << event.buf << std::endl;
         struct mr_message *msg;
         msg = (struct mr_message *)event.buf;
         std::cout << "FI_MSG " << msg << std::endl;
         remote_key = msg->mr_key;
         remote_addr = msg->addr;
-        std::cout << "FI_MSG alps_app_pe " << alps_app_pe << std::endl;
+        //std::cout << "FI_MSG alps_app_pe " << alps_app_pe << std::endl;
         if(0 == strcmp(alps_app_pe, "1")) {
 
           struct iovec rma_iov;
@@ -320,6 +297,8 @@ int main(int argc, char **argv) {
           start = std::chrono::high_resolution_clock::now();
           res = fi_writemsg(ep, &rma_msg, FI_REMOTE_CQ_DATA);
           assert(result == 0);
+        }else {
+
         }
       }
     }
