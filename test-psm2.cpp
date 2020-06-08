@@ -310,7 +310,10 @@ int main(int argc, char **argv) {
 					rma_msg.context = &fi_write2_context;
 					rma_msg.data = 14195;
 					start = std::chrono::high_resolution_clock::now();
+					cout << "[" << alps_app_pe
+												<< "] start fi_writemsg call ...\n";
 					res = fi_writemsg(ep, &rma_msg, FI_COMPLETION|FI_INJECT);
+					cout << "[" << alps_app_pe << "] fi_writemsg call ended\n";
 					assert(result == 0);
 				} else {
 
