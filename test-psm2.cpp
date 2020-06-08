@@ -271,7 +271,7 @@ int main(int argc, char **argv) {
 					res = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
 					cout << "[" << alps_app_pe << "] fi_writemsg call ended\n";
 					assert(result == 0);
-					if (counter >= iterations / 2) {
+					if (counter == iterations / 2) {
 						cout << "[" << alps_app_pe << "] start fi_sendmsg call ...\n";
 						ssize_t result = fi_sendmsg(ep, &msg, FI_REMOTE_CQ_DATA);
 						cout << "[" << alps_app_pe << "] fi_sendmsg call ended\n";
@@ -281,14 +281,16 @@ int main(int argc, char **argv) {
 				}
 			}
 			if ((event.flags & FI_MSG) != 0) {
-				std::cout << "FI_MSG " << counter << std::endl;
+				std::cout << "FI_MSG " << counter << "    " << (event.flags & FI_SEND) << " --> " << (event.flags & FI_RECV) << std::endl;
 				//std::cout << "FI_MSG " << event.flags << std::endl;
 				//std::cout << "FI_MSG " << event.buf << std::endl;
-				struct mr_message *msg;
-				msg = (struct mr_message*) event.buf;
-				std::cout << "FI_MSG " << msg << std::endl;
-				remote_key = msg->mr_key;
-				remote_addr = msg->addr;
+				if (counter == 0){
+					struct mr_message *msg;
+					msg = (struct mr_message*) event.buf;
+					std::cout << "FI_MSG " << msg << std::endl;
+					remote_key = msg->mr_key;
+					remote_addr = msg->addr;
+				}
 				//std::cout << "FI_MSG alps_app_pe " << alps_app_pe << std::endl;
 				if (0 == strcmp(alps_app_pe, "1")) {
 
