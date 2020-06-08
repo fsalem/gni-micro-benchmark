@@ -293,6 +293,7 @@ int main(int argc, char **argv) {
         msg = (struct mr_message *)event.buf;
         remote_key = msg->mr_key;
         remote_addr = msg->addr;
+        std::cout << "FI_MSG alps_app_pe " << alps_app_pe << std::endl;
         if(0 == strcmp(alps_app_pe, "1")) {
 
           struct iovec rma_iov;
