@@ -234,14 +234,19 @@ int main(int argc, char **argv) {
     if(read == 1) {
       if((event.flags & FI_RMA) != 0) {
         std::cout << "FI_RMA " << std::endl;
-        //if(0 == strcmp(alps_app_pe, "1")) {
-          counter++;
+        counter++;
+        if(0 == strcmp(alps_app_pe, "1")) {
           if(counter == iterations) {
             end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> elapsed_seconds = end-start;
             cout << (buffer_size * 2 * iterations)/elapsed_seconds.count()/1024.0/1024.0/1024.0 << " GB/s" << endl;
             exit(1);
-          //}
+          }
+        }else{
+        	if (counter >= iterations/2){
+        		cout << "force exit after " << counter << "...\n";
+        		exit(1);
+        	}
         }
         struct iovec rma_iov;
         rma_iov.iov_base = buffer;
@@ -261,7 +266,9 @@ int main(int argc, char **argv) {
         rma_msg.rma_iov_count = 1;
         rma_msg.context       = &fi_write1_context;
         rma_msg.data          = 14195;
+        cout << "[" << alps_app_pe << "] start fi_writemsg call ...";
         res = fi_writemsg(ep, &rma_msg, FI_REMOTE_CQ_DATA);
+        cout << "[" << alps_app_pe << "] fi_writemsg call ended";
         assert(result == 0);
       }
       if((event.flags & FI_MSG) != 0) {
