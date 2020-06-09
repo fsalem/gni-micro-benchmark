@@ -268,7 +268,7 @@ void writemsg() {
 
 void sender_cq_event_handler(struct fi_cq_data_entry event) {
 	ssize_t result;
-	if ((event.flags & FI_RMA) != 0) || dest_terminated) {
+	if ((event.flags & FI_RMA) != 0 || dest_terminated) {
 		std::cout << "FI_RMA " << counter << std::endl;
 		counter++;
 		// terminate
@@ -333,10 +333,7 @@ void receiver_cq_event_handler(struct fi_cq_data_entry event) {
 			exit(1);
 		}
 		counter++;
-
-		int res = fi_recv(ep, &recv_buffer, recv_buffer_len, NULL, FI_ADDR_UNSPEC,
-				&fi_recv_context);
-		assert(res == 0);
+		post_recv();
 	}
 }
 /**
