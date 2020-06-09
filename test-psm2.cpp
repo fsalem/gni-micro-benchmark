@@ -209,7 +209,7 @@ void insert_dest_av() {
 
 void post_recv() {
 	size_t recv_buffer_len = sizeof(recv_buffer);
-	int res = fi_recv(ep, &recv_buffer, recv_buffer_len, NULL, FI_ADDR_UNSPEC,
+	int res = fi_recv(ep, &recv_buffer, recv_buffer_len, NULL, fi_addr,
 			&fi_recv_context);
 	assert(res == 0);
 }
@@ -235,7 +235,7 @@ void post_send() {
 	msg.data = 14195;
 
 	cout << "[" << alps_app_pe << "] start fi_sendmsg call ...\n";
-	ssize_t result = fi_sendmsg(ep, &msg, FI_REMOTE_CQ_DATA);
+	ssize_t result = fi_sendmsg(ep, &msg, FI_COMPLETION);
 	cout << "[" << alps_app_pe << "] fi_sendmsg call ended\n";
 	cout << fi_strerror(-result) << endl;
 	assert(result == 0);
