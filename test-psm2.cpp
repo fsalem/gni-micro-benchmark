@@ -38,20 +38,6 @@ const size_t buffer_size = 1024 * 1024;
 //const size_t buffer_size = 1024;
 const unsigned int iterations = 200;
 
-char *buffer;
-struct mr_message recv_buffer;
-struct mr_message send_buffer;
-struct fi_custom_context fi_recv_context;
-struct fi_custom_context fi_send_context;
-struct fi_custom_context fi_write1_context;
-struct fi_custom_context fi_write2_context;
-uint64_t remote_key;
-uintptr_t remote_addr;
-unsigned int counter = 0;
-bool dest_terminated = false;
-std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-
-char *ip_address, *alps_app_pe;
 
 struct mr_message {
 	uint64_t mr_key;
@@ -63,6 +49,22 @@ struct fi_custom_context {
 	uint64_t id;
 	uint64_t op_context;
 } fi_custom_context;
+
+char *buffer;
+struct mr_message recv_buffer;
+struct mr_message send_buffer;
+struct fi_custom_context fi_recv_context;
+struct fi_custom_context fi_send_context;
+struct fi_custom_context fi_write1_context;
+struct fi_custom_context fi_write2_context;
+uint64_t remote_key;
+uintptr_t remote_addr;
+uint64_t mr_key;
+unsigned int counter = 0;
+bool dest_terminated = false;
+std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+
+char *ip_address, *alps_app_pe;
 
 char* get_other_address() {
 	std::string line;
@@ -182,14 +184,14 @@ void init_av() {
 	assert(res == 0);
 }
 
-uint64_t register_mem() {
+void register_mem() {
 	cout << "register memory" << endl;
 	int res = posix_memalign((void**) &buffer, 4096, buffer_size);
 	assert(res == 0);
 	res = fi_mr_reg(domain, buffer, buffer_size, FI_REMOTE_WRITE, 0, 0, 0, &mr,
 			NULL);
 	assert(res == 0);
-	return fi_mr_key(mr);
+	mr_key = fi_mr_key(mr);
 
 }
 
@@ -244,6 +246,9 @@ void writemsg() {
 	rma_remote_iov.addr = remote_addr;
 	rma_remote_iov.len = buffer_size;
 	rma_remote_iov.key = remote_key;
+
+	void *descs;
+	descs = NULL;
 
 	struct fi_msg_rma rma_msg;
 	rma_msg.msg_iov = &rma_iov;
@@ -301,10 +306,8 @@ void sender_cq_event_handler(struct fi_cq_data_entry event) {
 		remote_key = msg->mr_key;
 		remote_addr = msg->addr;
 		//std::cout << "FI_MSG alps_app_pe " << alps_app_pe << std::endl;
-		writemsg()
-		result = fi_recv(ep, &recv_buffer, recv_buffer_len, NULL, FI_ADDR_UNSPEC,
-				&fi_recv_context);
-		assert(result == 0);
+		writemsg();
+		post_recv();
 	}
 }
 
@@ -349,7 +352,7 @@ int main(int argc, char **argv) {
 	init_cq();
 	init_ep();
 	init_av();
-	uint64_t mr_key = register_mem();
+	register_mem();
 
 	sleep(10);
 
@@ -372,7 +375,7 @@ int main(int argc, char **argv) {
 			sender_cq_event_handler(event);
 		}
 		if (read == 1 && 0 == strcmp(alps_app_pe, "0")) {
-			client_cq_event_handler(event);
+			receiver_cq_event_handler(event);
 		}
 	}
 
