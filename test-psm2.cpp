@@ -230,102 +230,107 @@ int main(int argc, char **argv) {
 	uint64_t remote_key;
 	uintptr_t remote_addr;
 	unsigned int counter = 0;
+	bool dest_terminated = false;
 	std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
 	while (1) {
 		struct fi_cq_data_entry event;
 		ssize_t read = fi_cq_read(cq, &event, 1);
-		if (read == 1) {
-			if ((event.flags & FI_RMA) != 0) {
-				std::cout << "FI_RMA " << counter << std::endl;
-				counter++;
-				if (0 == strcmp(alps_app_pe, "1")) {
-					if (counter == iterations) {
-						end = std::chrono::high_resolution_clock::now();
-						std::chrono::duration<double> elapsed_seconds = end
-								- start;
-						cout
-								<< (buffer_size * 2 * iterations)
-										/ elapsed_seconds.count() / 1024.0
-										/ 1024.0 / 1024.0 << " GB/s" << endl;
-						exit(1);
-					}
-					if (counter == iterations / 2) {
-						cout << "[" << alps_app_pe << "] start fi_sendmsg call ...\n";
-						ssize_t result = fi_sendmsg(ep, &msg, FI_REMOTE_CQ_DATA);
-						cout << "[" << alps_app_pe << "] fi_sendmsg call ended\n";
-						cout << fi_strerror(-result) << endl;
-						assert(result == 0);
-						sleep(5);
-					}
-					struct iovec rma_iov;
-					rma_iov.iov_base = buffer;
-					rma_iov.iov_len = buffer_size;
-
-					struct fi_rma_iov rma_remote_iov;
-					rma_remote_iov.addr = remote_addr;
-					rma_remote_iov.len = buffer_size;
-					rma_remote_iov.key = remote_key;
-
-					struct fi_msg_rma rma_msg;
-					rma_msg.msg_iov = &rma_iov;
-					rma_msg.desc = &descs;
-					rma_msg.iov_count = 1;
-					rma_msg.addr = fi_addr;
-					rma_msg.rma_iov = &rma_remote_iov;
-					rma_msg.rma_iov_count = 1;
-					rma_msg.context = &fi_write1_context;
-					rma_msg.data = 14195;
-					cout << "[" << alps_app_pe << "] start fi_writemsg call ...\n";
-					res = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
-					cout << "[" << alps_app_pe << "] fi_writemsg call ended\n";
-					assert(result == 0);
+		if (read == 1 && ((event.flags & FI_RMA) != 0 || dest_terminated)) {
+			std::cout << "FI_RMA " << counter << std::endl;
+			counter++;
+			if (0 == strcmp(alps_app_pe, "1")) {
+				if (counter == iterations) {
+					end = std::chrono::high_resolution_clock::now();
+					std::chrono::duration<double> elapsed_seconds = end - start;
+					cout
+							<< (buffer_size * 2 * iterations)
+									/ elapsed_seconds.count() / 1024.0 / 1024.0
+									/ 1024.0 << " GB/s" << endl;
+					exit(1);
 				}
-			}
-			if ((event.flags & FI_RECV) != 0) {
-				std::cout << "FI_MSG " << counter << "    " << (event.flags & FI_SEND) << " --> " << (event.flags & FI_RECV) << std::endl;
-				//std::cout << "FI_MSG " << event.flags << std::endl;
-				//std::cout << "FI_MSG " << event.buf << std::endl;
-				struct mr_message *msg;
-				msg = (struct mr_message*) event.buf;
-				std::cout << "FI_MSG " << msg << std::endl;
-				remote_key = msg->mr_key;
-				remote_addr = msg->addr;
-				//std::cout << "FI_MSG alps_app_pe " << alps_app_pe << std::endl;
-				if (0 == strcmp(alps_app_pe, "1")) {
-
-					struct iovec rma_iov;
-					rma_iov.iov_base = buffer;
-					rma_iov.iov_len = buffer_size;
-
-					struct fi_rma_iov rma_remote_iov;
-					rma_remote_iov.addr = remote_addr;
-					rma_remote_iov.len = buffer_size;
-					rma_remote_iov.key = remote_key;
-
-					struct fi_msg_rma rma_msg;
-					rma_msg.msg_iov = &rma_iov;
-					rma_msg.desc = &descs;
-					rma_msg.iov_count = 1;
-					rma_msg.addr = fi_addr;
-					rma_msg.rma_iov = &rma_remote_iov;
-					rma_msg.rma_iov_count = 1;
-					rma_msg.context = &fi_write2_context;
-					rma_msg.data = 14195;
-					start = std::chrono::high_resolution_clock::now();
-					res = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
+				if (counter == iterations / 2) {
+					cout << "[" << alps_app_pe
+							<< "] start fi_sendmsg call ...\n";
+					ssize_t result = fi_sendmsg(ep, &msg, FI_REMOTE_CQ_DATA);
+					cout << "[" << alps_app_pe << "] fi_sendmsg call ended\n";
+					cout << fi_strerror(-result) << endl;
 					assert(result == 0);
-				}else {
-					if (counter == 1){
-						cout << "force exit after " << counter << "...\n";
-						exit(1);
-					}
-					counter++;
+					dest_terminated = true;
+					sleep(5);
 				}
-				res = fi_recv(ep, &recv_buffer, recv_buffer_len, NULL, FI_ADDR_UNSPEC, &fi_recv_context);
-				assert(res == 0);
+				struct iovec rma_iov;
+				rma_iov.iov_base = buffer;
+				rma_iov.iov_len = buffer_size;
+
+				struct fi_rma_iov rma_remote_iov;
+				rma_remote_iov.addr = remote_addr;
+				rma_remote_iov.len = buffer_size;
+				rma_remote_iov.key = remote_key;
+
+				struct fi_msg_rma rma_msg;
+				rma_msg.msg_iov = &rma_iov;
+				rma_msg.desc = &descs;
+				rma_msg.iov_count = 1;
+				rma_msg.addr = fi_addr;
+				rma_msg.rma_iov = &rma_remote_iov;
+				rma_msg.rma_iov_count = 1;
+				rma_msg.context = &fi_write1_context;
+				rma_msg.data = 14195;
+				cout << "[" << alps_app_pe << "] start fi_writemsg call ...\n";
+				res = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
+				cout << "[" << alps_app_pe << "] fi_writemsg call ended\n";
+				assert(result == 0);
+				if (dest_terminated)sleep(1);
 			}
 		}
-	}
+		if (read == 1 && (event.flags & FI_RECV) != 0) {
+			std::cout << "FI_MSG " << counter << "    "
+					<< (event.flags & FI_SEND) << " --> "
+					<< (event.flags & FI_RECV) << std::endl;
+			//std::cout << "FI_MSG " << event.flags << std::endl;
+			//std::cout << "FI_MSG " << event.buf << std::endl;
+			struct mr_message *msg;
+			msg = (struct mr_message*) event.buf;
+			std::cout << "FI_MSG " << msg << std::endl;
+			remote_key = msg->mr_key;
+			remote_addr = msg->addr;
+			//std::cout << "FI_MSG alps_app_pe " << alps_app_pe << std::endl;
+			if (0 == strcmp(alps_app_pe, "1")) {
 
-	return 0;
+				struct iovec rma_iov;
+				rma_iov.iov_base = buffer;
+				rma_iov.iov_len = buffer_size;
+
+				struct fi_rma_iov rma_remote_iov;
+				rma_remote_iov.addr = remote_addr;
+				rma_remote_iov.len = buffer_size;
+				rma_remote_iov.key = remote_key;
+
+				struct fi_msg_rma rma_msg;
+				rma_msg.msg_iov = &rma_iov;
+				rma_msg.desc = &descs;
+				rma_msg.iov_count = 1;
+				rma_msg.addr = fi_addr;
+				rma_msg.rma_iov = &rma_remote_iov;
+				rma_msg.rma_iov_count = 1;
+				rma_msg.context = &fi_write2_context;
+				rma_msg.data = 14195;
+				start = std::chrono::high_resolution_clock::now();
+				res = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
+				assert(result == 0);
+			} else {
+				if (counter == 1) {
+					cout << "force exit after " << counter << "...\n";
+					exit(1);
+				}
+				counter++;
+			}
+			res = fi_recv(ep, &recv_buffer, recv_buffer_len, NULL,
+					FI_ADDR_UNSPEC, &fi_recv_context);
+			assert(res == 0);
+		}
+	}
+}
+
+return 0;
 }
