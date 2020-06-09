@@ -62,7 +62,7 @@ uintptr_t remote_addr;
 uint64_t mr_key;
 unsigned int counter = 0;
 bool dest_terminated = false;
-std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+std::chrono::time_point<std::chrono::high_resolution_clock> startT, endT;
 
 char *ip_address, *alps_app_pe;
 
@@ -273,8 +273,8 @@ void sender_cq_event_handler(struct fi_cq_data_entry event) {
 		counter++;
 		// terminate
 		if (counter == iterations) {
-			end = std::chrono::high_resolution_clock::now();
-			std::chrono::duration<double> elapsed_seconds = end - start;
+			endT = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<double> elapsed_seconds = endT - startT;
 			cout
 			<< (buffer_size * 2 * iterations)
 			/ elapsed_seconds.count() / 1024.0 / 1024.0
@@ -300,6 +300,7 @@ void sender_cq_event_handler(struct fi_cq_data_entry event) {
 				<< " --> " << (event.flags & FI_RECV) << std::endl;
 		//std::cout << "FI_MSG " << event.flags << std::endl;
 		//std::cout << "FI_MSG " << event.buf << std::endl;
+		startT = std::chrono::high_resolution_clock::now();
 		struct mr_message *msg;
 		msg = (struct mr_message*) event.buf;
 		std::cout << "FI_MSG " << msg << std::endl;
