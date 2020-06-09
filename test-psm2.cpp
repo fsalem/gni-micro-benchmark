@@ -38,7 +38,6 @@ const size_t buffer_size = 1024 * 1024;
 //const size_t buffer_size = 1024;
 const unsigned int iterations = 200;
 
-
 struct mr_message {
 	uint64_t mr_key;
 	uintptr_t addr;
@@ -99,7 +98,7 @@ struct fi_info* get_hints() {
 struct fi_info* find_psm2() {
 	struct fi_info *hints = get_hints();
 
-	int res = fi_getinfo(FI_VERSION(1, 1), ip_address, "14195", FI_SOURCE,
+	int res = fi_getinfo(FI_VERSION(1, 5), ip_address, "14195", FI_SOURCE,
 			hints, &info);
 	assert(res == 0);
 	assert(info != NULL);
@@ -121,7 +120,7 @@ struct fi_info* find_other_addr() {
 	char *other_addr = get_other_address();
 	cout << "other_addr: " << other_addr << endl;
 
-	int res = fi_getinfo(FI_VERSION(1, 1), other_addr, "14195", FI_NUMERICHOST,
+	int res = fi_getinfo(FI_VERSION(1, 5), other_addr, "14195", FI_NUMERICHOST,
 			hints, &info);
 	assert(res == 0);
 	assert(info != NULL);
@@ -154,9 +153,14 @@ void init_cq() {
 	cout << "setup cq" << endl;
 	struct fi_cq_attr cq_attr;
 	memset(&cq_attr, 0, sizeof(cq_attr));
-	cq_attr.format = FI_CQ_FORMAT_DATA;
+	cq_attr.size = 1000000;
 	cq_attr.flags = 0;
-	cq_attr.size = 10;
+	//cq_attr.format = FI_CQ_FORMAT_CONTEXT;
+	cq_attr.format = FI_CQ_FORMAT_TAGGED;
+	cq_attr.wait_obj = FI_WAIT_NONE;
+	cq_attr.signaling_vector = 1; // ??
+	cq_attr.wait_cond = FI_CQ_COND_NONE;
+	cq_attr.wait_set = nullptr;
 	int res = fi_cq_open(domain, &cq_attr, &cq, NULL);
 	assert(res == 0);
 }
@@ -277,9 +281,8 @@ void sender_cq_event_handler(struct fi_cq_data_entry event) {
 			endT = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> elapsed_seconds = endT - startT;
 			cout
-			<< (buffer_size * 2 * iterations)
-			/ elapsed_seconds.count() / 1024.0 / 1024.0
-			/ 1024.0 << " GB/s" << endl;
+					<< (buffer_size * 2 * iterations) / elapsed_seconds.count()
+							/ 1024.0 / 1024.0 / 1024.0 << " GB/s" << endl;
 			exit(1);
 		}
 		// send_msg to kill the other process
@@ -289,7 +292,8 @@ void sender_cq_event_handler(struct fi_cq_data_entry event) {
 			sleep(5);
 		}
 		writemsg();
-		if (dest_terminated)sleep(1);
+		if (dest_terminated)
+			sleep(1);
 
 	}
 	if ((event.flags & FI_RECV) != 0) {
