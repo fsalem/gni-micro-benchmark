@@ -273,6 +273,7 @@ void writemsg() {
 
 void sender_cq_event_handler(struct fi_cq_data_entry event) {
 	ssize_t result;
+
 	if ((event.flags & FI_RMA) != 0 || dest_terminated) {
 		std::cout << "FI_RMA " << counter << std::endl;
 		counter++;
@@ -286,15 +287,15 @@ void sender_cq_event_handler(struct fi_cq_data_entry event) {
 			exit(1);
 		}
 		// send_msg to kill the other process
-		if (counter == iterations / 2) {
+		if (counter >= iterations / 2) {
 			post_send();
 			dest_terminated = true;
-			sleep(5);
+			//sleep(5);
 		}
 		writemsg();
 		if (dest_terminated)
 			sleep(1);
-
+		return;
 	}
 	if ((event.flags & FI_RECV) != 0) {
 		std::cout << "FI_MSG " << counter << "    " << (event.flags & FI_SEND)
@@ -310,6 +311,7 @@ void sender_cq_event_handler(struct fi_cq_data_entry event) {
 		//std::cout << "FI_MSG alps_app_pe " << alps_app_pe << std::endl;
 		writemsg();
 		post_recv();
+		return;
 	}
 }
 
