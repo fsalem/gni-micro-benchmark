@@ -280,7 +280,8 @@ int main(int argc, char **argv) {
 				res = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
 				cout << "[" << alps_app_pe << "] fi_writemsg call ended\n";
 				assert(result == 0);
-				if (dest_terminated)sleep(1);
+				if (dest_terminated)
+					sleep(1);
 			}
 		}
 		if (read == 1 && (event.flags & FI_RECV) != 0) {
@@ -330,7 +331,6 @@ int main(int argc, char **argv) {
 			assert(res == 0);
 		}
 	}
-}
 
-return 0;
+	return 0;
 }
