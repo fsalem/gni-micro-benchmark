@@ -230,8 +230,9 @@ void post_send() {
 	msg.context = &fi_send_context;
 	msg.data = 14195;
 
-	//printf("fi_sendmsg\n");
+	cout << "[" << alps_app_pe << "] start fi_sendmsg call ...\n";
 	ssize_t result = fi_sendmsg(ep, &msg, FI_REMOTE_CQ_DATA);
+	cout << "[" << alps_app_pe << "] fi_sendmsg call ended\n";
 	cout << fi_strerror(-result) << endl;
 	assert(result == 0);
 
@@ -283,11 +284,7 @@ void sender_cq_event_handler(struct fi_cq_data_entry event) {
 		}
 		// send_msg to kill the other process
 		if (counter == iterations / 2) {
-			cout << "[" << alps_app_pe << "] start fi_sendmsg call ...\n";
-			result = fi_sendmsg(ep, &msg, FI_REMOTE_CQ_DATA);
-			cout << "[" << alps_app_pe << "] fi_sendmsg call ended\n";
-			cout << fi_strerror(-result) << endl;
-			assert(result == 0);
+			post_send();
 			dest_terminated = true;
 			sleep(5);
 		}
