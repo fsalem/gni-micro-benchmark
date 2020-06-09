@@ -70,10 +70,10 @@ char* get_other_address() {
 
 	ifstream file("nodes");
 	if (!file.is_open())
-		cout << "error while opening file" << endl;
+		cout << "[pid:" << alps_app_pe << "]error while opening file" << endl;
 
 	while (getline(file, line)) {
-		cout << "read from nodes file: " << line.c_str() << " local is "
+		cout << "[pid:" << alps_app_pe << "]read from nodes file: " << line.c_str() << " local is "
 				<< ip_address << endl;
 		if (ip_address != line)
 			return strdup(line.c_str());
@@ -118,7 +118,7 @@ struct fi_info* find_other_addr() {
 	struct fi_info *info = fi_allocinfo();
 	struct fi_info *hints = get_hints();
 	char *other_addr = get_other_address();
-	cout << "other_addr: " << other_addr << endl;
+	cout << "[pid:" << alps_app_pe << "] other_addr: " << other_addr << endl;
 
 	int res = fi_getinfo(FI_VERSION(1, 5), other_addr, "14195", FI_NUMERICHOST,
 			hints, &info);
@@ -138,19 +138,19 @@ struct fi_info* find_other_addr() {
 
 void init_fabric_domain() {
 	// fabric
-	cout << "setup fabric" << endl;
+	cout << "[pid:" << alps_app_pe << "]setup fabric" << endl;
 	int res = fi_fabric(info->fabric_attr, &fabric, NULL);
 	assert(res == 0);
 
 	// domain
-	cout << "setup domain" << endl;
+	cout << "[pid:" << alps_app_pe << "]setup domain" << endl;
 	res = fi_domain(fabric, info, &domain, NULL);
 	assert(res == 0);
 }
 
 void init_cq() {
 	// cq
-	cout << "setup cq" << endl;
+	cout << "[pid:" << alps_app_pe << "]setup cq" << endl;
 	struct fi_cq_attr cq_attr;
 	memset(&cq_attr, 0, sizeof(cq_attr));
 	cq_attr.size = 1000000;
@@ -166,10 +166,10 @@ void init_cq() {
 }
 
 void init_ep() {
-	cout << "create endpoint" << endl;
+	cout << "[pid:" << alps_app_pe << "]create endpoint" << endl;
 	int res = fi_endpoint(domain, info, &ep, NULL);
 	assert(res == 0);
-	cout << "bind cq" << endl;
+	//cout << "bind cq" << endl;
 	res = fi_ep_bind(ep, (fid_t) cq, FI_SEND | FI_RECV); //  | FI_TRANSMIT
 	assert(res == 0);
 	res = fi_enable(ep);
@@ -177,7 +177,7 @@ void init_ep() {
 }
 
 void init_av() {
-	cout << "build address vector" << endl;
+	cout << "[pid:" << alps_app_pe << "]build address vector" << endl;
 	struct fi_av_attr av_attr;
 	memset(&av_attr, 0, sizeof(struct fi_av_attr));
 	av_attr.type = FI_AV_TABLE;
@@ -189,7 +189,7 @@ void init_av() {
 }
 
 void register_mem() {
-	cout << "register memory" << endl;
+	cout << "[pid:" << alps_app_pe << "]register memory" << endl;
 	int res = posix_memalign((void**) &buffer, 4096, buffer_size);
 	assert(res == 0);
 	res = fi_mr_reg(domain, buffer, buffer_size, FI_REMOTE_WRITE, 0, 0, 0, &mr,
@@ -234,12 +234,11 @@ void post_send() {
 	msg.context = &fi_send_context;
 	msg.data = 14195;
 
-	cout << "[" << alps_app_pe << "] start fi_sendmsg call ...\n";
+	cout << "[pid:" << alps_app_pe << "] start fi_sendmsg call ...\n";
 	ssize_t result = fi_sendmsg(ep, &msg, FI_COMPLETION);
-	cout << "[" << alps_app_pe << "] fi_sendmsg call ended\n";
-	cout << fi_strerror(-result) << endl;
+	cout << "[pid:" << alps_app_pe << "] fi_sendmsg call ended with err:"
+			<< fi_strerror(-result) << endl;
 	assert(result == 0);
-
 }
 
 void writemsg() {
@@ -264,10 +263,10 @@ void writemsg() {
 	rma_msg.rma_iov_count = 1;
 	rma_msg.context = &fi_write1_context;
 	rma_msg.data = 14195;
-	cout << "[" << alps_app_pe << "] start fi_writemsg call ...\n";
+	cout << "[pid:" << alps_app_pe << "] start fi_writemsg call ...\n";
 	ssize_t result = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
-	cout << "[" << alps_app_pe << "] fi_writemsg call ended! result:" << result
-			<< "\n";
+	cout << "[pid:" << alps_app_pe << "] fi_writemsg call ended! with err:"
+			<< result << endl;
 	assert(result == 0);
 }
 
@@ -275,13 +274,13 @@ void sender_cq_event_handler(struct fi_cq_data_entry event) {
 	ssize_t result;
 
 	if ((event.flags & FI_RMA) != 0 || dest_terminated) {
-		std::cout << "FI_RMA " << counter << std::endl;
+		std::cout << "[pid:" << alps_app_pe << "]FI_RMA call#" << counter << std::endl;
 		counter++;
 		// terminate
 		if (counter == iterations) {
 			endT = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> elapsed_seconds = endT - startT;
-			cout
+			cout <<"[pid:" << alps_app_pe << "] bw:"
 					<< (buffer_size * 2 * iterations) / elapsed_seconds.count()
 							/ 1024.0 / 1024.0 / 1024.0 << " GB/s" << endl;
 			exit(1);
@@ -298,14 +297,13 @@ void sender_cq_event_handler(struct fi_cq_data_entry event) {
 		return;
 	}
 	if ((event.flags & FI_RECV) != 0) {
-		std::cout << "FI_MSG " << counter << "    " << (event.flags & FI_SEND)
-				<< " --> " << (event.flags & FI_RECV) << std::endl;
+		std::cout << "[pid:" << alps_app_pe << "] FI_RECV is triggered\n";
 		//std::cout << "FI_MSG " << event.flags << std::endl;
 		//std::cout << "FI_MSG " << event.buf << std::endl;
 		startT = std::chrono::high_resolution_clock::now();
 		struct mr_message *msg;
 		msg = (struct mr_message*) event.buf;
-		std::cout << "FI_MSG " << msg << std::endl;
+		//std::cout << "FI_MSG " << msg << std::endl;
 		remote_key = msg->mr_key;
 		remote_addr = msg->addr;
 		//std::cout << "FI_MSG alps_app_pe " << alps_app_pe << std::endl;
@@ -316,24 +314,19 @@ void sender_cq_event_handler(struct fi_cq_data_entry event) {
 }
 
 void receiver_cq_event_handler(struct fi_cq_data_entry event) {
-	if ((event.flags & FI_RMA) != 0) {
-		std::cout << "FI_RMA " << counter << std::endl;
-		counter++;
-	}
 	if ((event.flags & FI_RECV) != 0) {
-		std::cout << "FI_MSG " << counter << "    " << (event.flags & FI_SEND)
-				<< " --> " << (event.flags & FI_RECV) << std::endl;
+		std::cout << "[pid:" << alps_app_pe << "] FI_RECV is triggered\n";
 		//std::cout << "FI_MSG " << event.flags << std::endl;
 		//std::cout << "FI_MSG " << event.buf << std::endl;
 		struct mr_message *msg;
 		msg = (struct mr_message*) event.buf;
-		std::cout << "FI_MSG " << msg << std::endl;
+		//std::cout << "FI_MSG " << msg << std::endl;
 		remote_key = msg->mr_key;
 		remote_addr = msg->addr;
 		//std::cout << "FI_MSG alps_app_pe " << alps_app_pe << std::endl;
 
 		if (counter == 1) {
-			cout << "force exit after " << counter << "...\n";
+			cout << "[pid:" << alps_app_pe << "]force exit after " << counter << "...\n";
 			exit(1);
 		}
 		counter++;
