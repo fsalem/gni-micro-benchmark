@@ -251,7 +251,7 @@ int main(int argc, char **argv) {
 				if (counter == iterations / 2) {
 					cout << "[" << alps_app_pe
 							<< "] start fi_sendmsg call ...\n";
-					ssize_t result = fi_sendmsg(ep, &msg, FI_REMOTE_CQ_DATA);
+					result = fi_sendmsg(ep, &msg, FI_REMOTE_CQ_DATA);
 					cout << "[" << alps_app_pe << "] fi_sendmsg call ended\n";
 					cout << fi_strerror(-result) << endl;
 					assert(result == 0);
@@ -277,8 +277,8 @@ int main(int argc, char **argv) {
 				rma_msg.context = &fi_write1_context;
 				rma_msg.data = 14195;
 				cout << "[" << alps_app_pe << "] start fi_writemsg call ...\n";
-				res = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
-				cout << "[" << alps_app_pe << "] fi_writemsg call ended\n";
+				result = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
+				cout << "[" << alps_app_pe << "] fi_writemsg call ended! result:" << result <<"\n";
 				assert(result == 0);
 				if (dest_terminated)
 					sleep(1);
@@ -317,7 +317,7 @@ int main(int argc, char **argv) {
 				rma_msg.context = &fi_write2_context;
 				rma_msg.data = 14195;
 				start = std::chrono::high_resolution_clock::now();
-				res = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
+				result = fi_writemsg(ep, &rma_msg, FI_COMPLETION);
 				assert(result == 0);
 			} else {
 				if (counter == 1) {
