@@ -15,17 +15,17 @@ echo "NODE_LIST=$SLURM_JOB_NODELIST"
 # Get the addresses on the nodes
 ADR=""
 ADR=$(srun -N $SLURM_JOB_NUM_NODES get_addresses.sh | sort -k1 -n | awk '{ print $1}')
-echo "ADD1=$ADR"
+#echo "ADD1=$ADR"
 ADR=($(sort <<<"${ADR[*]}"))
-echo "ADD2=$ADR"
+#echo "ADD2=$ADR"
 ADR=$( IFS=$' '; echo "${ADR[*]}" )
-echo "ADD3=$ADR"
+#echo "ADD3=$ADR"
 
-echo "# of nodes = $SLURM_JOB_NUM_NODES, COMPUTE=$COMPUTE, INPUT=$INPUT, ADR='$ADR'"
-rm "nodes" "test-psm2" "0.txt" "1.txt"
+#echo "# of nodes = $SLURM_JOB_NUM_NODES, COMPUTE=$COMPUTE, INPUT=$INPUT, ADR='$ADR'"
+rm "nodes" "test-psm2"
 for ip in $ADR
 do
-    echo "$ip"
+    #echo "$ip"
     echo "$ip" >> "nodes"
 done
 
