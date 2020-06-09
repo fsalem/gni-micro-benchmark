@@ -235,7 +235,7 @@ int main(int argc, char **argv) {
 	while (1) {
 		struct fi_cq_data_entry event;
 		ssize_t read = fi_cq_read(cq, &event, 1);
-		if (read == 1 && ((event.flags & FI_RMA) != 0 || dest_terminated)) {
+		if ((read == 1 && (event.flags & FI_RMA) != 0) || dest_terminated) {
 			std::cout << "FI_RMA " << counter << std::endl;
 			counter++;
 			if (0 == strcmp(alps_app_pe, "1")) {
