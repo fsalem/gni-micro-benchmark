@@ -1,8 +1,8 @@
 Note, that this benchmark only works with psm2. It explicitly requests the PSM2 provider:
 strcmp("psm2",info->fabric_attr->prov_name)
 
-The build-psm2.sh script builds the test executable and runs it. Note,
-that you have to change the LIBFABRIC variable in build-psm2.sh to
+The sbatch.sh script builds the test executable and runs it. Note,
+that you have to change the LIBFABRIC variable in sbatch.sh to
 match you envrionment.
 
 You might need to change get_addresses.sh which retrieves the IP address of the machine
