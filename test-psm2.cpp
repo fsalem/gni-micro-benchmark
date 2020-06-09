@@ -36,7 +36,7 @@ fi_addr_t fi_addr;
 const size_t buffer_size = 1024 * 1024;
 //const size_t buffer_size = 16*1024;
 //const size_t buffer_size = 1024;
-const unsigned int iterations = 200;
+const unsigned int iterations = 2000000;
 
 struct mr_message {
 	uint64_t mr_key;
@@ -287,14 +287,14 @@ void sender_cq_event_handler(struct fi_cq_data_entry event) {
 			exit(1);
 		}
 		// send_msg to kill the other process
-		if (counter >= iterations / 2) {
+		if (counter == 5/*iterations / 2*/) {
 			post_send();
 			dest_terminated = true;
 			//sleep(5);
 		}
 		writemsg();
-		if (dest_terminated)
-			sleep(1);
+		//if (dest_terminated)
+		//	sleep(1);
 		return;
 	}
 	if ((event.flags & FI_RECV) != 0) {
